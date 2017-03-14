@@ -72,7 +72,8 @@ class RPPT {
   bool kbPresent = false;
   bool camPresent = false;
   bool photoPresent = false;
-  bool blockPresent = false;
+  bool mapPresent = false;
+  bool callTransperancy = true;
 
   
   RPPT() {
@@ -121,7 +122,7 @@ class RPPT {
     ctx.restore();
 
 
-    // grab a bitmap from the canvas
+    // grab a bitphoto from the canvas
     ImageData id = ctx.getImageData(0, 0, video.videoWidth, video.videoHeight);
     List<TopCode> codes = scanner.scan(id, ctx);
 
@@ -185,32 +186,37 @@ class RPPT {
       double radius = cd[93][1];
 
       // top left
-      double x1 = cd[93][2] + radius;
-      double y1 = cd[93][3] - radius;
+      double x1_web = cd[93][2] + radius;
+      double y1_web = cd[93][3] - radius;
 
       // top right
-      double x2 = cd[155][2] + radius;
+      double x2_web = cd[155][2] - radius;
 
       // bottom left
-      double y2 = cd[203][3] - radius; 
+      double y2_web = cd[203][3] + radius; 
 
       // coordinate transforms
-      x1 = (892 - x1) * (375/455);
-      x2 = (892 - x2) * (375/455);
-      y1 = (y1 - 20) * (667 / 650);
-      y2 = (y2 - 20) * (667 / 650);
+      double x1_ios = (892 - x1_web) * (375/455);
+      double x2_ios = (892 - x2_web) * (375/455);
+      double y1_ios = (y1_web - 20) * (667 / 650);
+      double y2_ios = (y2_web - 20) * (667 / 650);
 
-      double height = y2 - y1;
-      double width = x2 - x1;
+      double height_ios = y2_ios - y1_ios;
+      double width_ios = x2_ios - x1_ios;
 
-      print([x1, y1, height, width]);
+      double height_web = y2_web - y1_web;
+      double width_web = x2_web - x1_web;
 
-      context['Meteor'].callMethod('call', ['photo', session, x1, y1, height, width]);
+      print([x1_ios, y1_ios, height_ios, width_ios]);
+
+      context['Meteor'].callMethod('call', ['photo', session, x1_ios, y1_ios, height_ios, width_ios]);
       photoPresent = true;
 
        // call screenshot for multi-fidelity overlay
-      if (cd.containsKey(421)) {
-        context.callMethod('screenshot', [x1, y1, height, width]);
+      if (cd.containsKey(421) && callTransperancy) {
+        print('call transperancy');
+        context.callMethod('screenshot', [x1_web, y1_web, height_web, width_web]);
+        callTransperancy = false;
       }
     }
     else if (photoPresent && (!cd.containsKey(93) || !cd.containsKey(155) || !cd.containsKey(203) || !cd.containsKey(271)) ){
@@ -219,22 +225,52 @@ class RPPT {
       photoPresent = false;
     }
 
-    // // send block
-    // if (cd.containsKey(93) && !blockPresent){
-    //   print('show block');
-    //   int x = cd[93][2];
-    //   int y = cd[93][3];
-    //   int radius = cd[93][1];
-    //   context['Meteor'].callMethod('call', ['block', session, x, y, radius]);
-    //   blockPresent = true;
-    // }
-    // else if (blockPresent && !cd.containsKey(93)){
-    //   print('hide block');
-    //   context['Meteor'].callMethod('call', ['block', session, -999, -999]);
-    //   blockPresent = true;
-    // }
 
+    // map
+    // 157 – top L; 205 – top  R; 279 – bottom L; 327 – bottom R
+    if (cd.containsKey(157) && cd.containsKey(205) && cd.containsKey(279) && cd.containsKey(327)){
+      print('show map');
+      double radius = cd[157][1];
 
+      // top left
+      double x1_web = cd[157][2] + radius;
+      double y1_web = cd[157][3] - radius;
+
+      // top right
+      double x2_web = cd[205][2] + radius;
+
+      // bottom left
+      double y2_web = cd[279][3] - radius; 
+
+      // coordinate transforms
+      double x1_ios = (892 - x1_web) * (375/455);
+      double x2_ios = (892 - x2_web) * (375/455);
+      double y1_ios = (y1_web - 20) * (667 / 650);
+      double y2_ios = (y2_web - 20) * (667 / 650);
+
+      double height_ios = y2_ios - y1_ios;
+      double width_ios = x2_ios - x1_ios;
+
+      double height_web = y2_web - y1_web;
+      double width_web = x2_web - x1_web;
+
+      print([x1_ios, y1_ios, height_ios, width_ios]);
+
+      context['Meteor'].callMethod('call', ['map', session, x1_ios, y1_ios, height_ios, width_ios]);
+      mapPresent = true;
+
+       // call screenshot for multi-fidelity overlay
+      if (cd.containsKey(331)) {
+        context.callMethod('screenshot', [x1_web, y1_web, height_web, width_web]);
+      }
+    }
+    else if (mapPresent && (!cd.containsKey(157) || !cd.containsKey(205) || !cd.containsKey(279) || !cd.containsKey(327)) ){
+      print('hide map');
+      context['Meteor'].callMethod('call', ['map', session, -999, -999, -999, -999]);
+      mapPresent = false;
+    }
+
+    
     print(cd);
   }
 
