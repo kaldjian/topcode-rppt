@@ -215,7 +215,7 @@ class RPPT {
        // call screenshot for multi-fidelity overlay
       if (cd.containsKey(421) && callTransperancy) {
         print('call transperancy');
-        context.callMethod('screenshot', [x1_web, y1_web, height_web, width_web]);
+        context.callMethod('screenshot', [x1_web, y1_web, width_web, height_web, x1_ios, y1_ios, width_ios, height_ios]);
         callTransperancy = false;
       }
     }
@@ -261,7 +261,7 @@ class RPPT {
 
        // call screenshot for multi-fidelity overlay
       if (cd.containsKey(331)) {
-        context.callMethod('screenshot', [x1_web, y1_web, height_web, width_web]);
+        context.callMethod('screenshot', [x1_web, y1_web, width_web, height_web, x1_ios, y1_ios, width_ios, height_ios]);
       }
     }
     else if (mapPresent && (!cd.containsKey(157) || !cd.containsKey(205) || !cd.containsKey(279) || !cd.containsKey(327)) ){
