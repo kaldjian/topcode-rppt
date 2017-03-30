@@ -25,7 +25,6 @@ library rppt;
 import 'dart:html';
 import 'dart:math';
 import 'dart:async';
-import 'dart:convert';
 import 'dart:js';
 
 part 'compiler.dart';
@@ -52,7 +51,7 @@ void main() {
 
 
 class RPPT {
-  
+
   /* <canvas> tag drawing context */
   CanvasRenderingContext2D ctx;
 
@@ -75,13 +74,13 @@ class RPPT {
   bool mapPresent = false;
   bool callTransperancy = true;
 
-  
+
   RPPT() {
     CanvasElement canvas = querySelector("#video-canvas");
     ctx = canvas.getContext("2d");
     scanner = new Scanner();
     video = querySelector("#video-stream");
-    
+
     video.autoplay = true;
     video.onPlay.listen((e) {
       timer = new Timer.periodic(const Duration(milliseconds : 100), refreshCanvas);
@@ -110,7 +109,6 @@ class RPPT {
       print("stopping scan");
       return;
     }
-
 
     // draw a frame from the video stream onto the canvas (flipped horizontally)
     ctx.save();
@@ -190,16 +188,21 @@ class RPPT {
       double y1_web = cd[93][3] - radius;
 
       // top right
-      double x2_web = cd[155][2] - radius;
+      double x2_web = cd[155][2] + radius;
 
       // bottom left
-      double y2_web = cd[203][3] + radius; 
+      double y2_web = cd[203][3] - radius;
+
+
+      double iosWidth = 375.0; // actual width
+      double iosHeight = 375.0 * 1.4375; // height of stream element
+      double iosMenuBar = 20.0;
 
       // coordinate transforms
-      double x1_ios = (892 - x1_web) * (375/455);
-      double x2_ios = (892 - x2_web) * (375/455);
-      double y1_ios = (y1_web - 20) * (667 / 650);
-      double y2_ios = (y2_web - 20) * (667 / 650);
+      double x1_ios = (892 - x1_web) * (iosWidth / 455);
+      double x2_ios = (892 - x2_web) * (iosWidth / 455);
+      double y1_ios = ((y1_web - 20) * (iosHeight / 650)) + iosMenuBar;
+      double y2_ios = ((y2_web - 20) * (iosHeight / 650)) + iosMenuBar;
 
       double height_ios = y2_ios - y1_ios;
       double width_ios = x2_ios - x1_ios;
@@ -225,8 +228,7 @@ class RPPT {
       photoPresent = false;
     }
 
-
-    // map
+    // <editor-fold desc="map">
     // 157 – top L; 205 – top  R; 279 – bottom L; 327 – bottom R
     if (cd.containsKey(157) && cd.containsKey(205) && cd.containsKey(279) && cd.containsKey(327)){
       print('show map');
@@ -269,8 +271,8 @@ class RPPT {
       context['Meteor'].callMethod('call', ['map', session, -999, -999, -999, -999]);
       mapPresent = false;
     }
+    // </editor-fold>
 
-    
     print(cd);
   }
 
