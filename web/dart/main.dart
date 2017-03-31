@@ -1,21 +1,21 @@
 /*
  * Tern Tangible Programming Language
  * Copyright (c) 2016 Michael S. Horn
- * 
+ *
  *           Michael S. Horn (michael-horn@northwestern.edu)
  *           Northwestern University
  *           2120 Campus Drive
  *           Evanston, IL 60613
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License (version 2) as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -135,6 +135,34 @@ class RPPT {
     parseCodes(codeDict);
   }
 
+  static int xOffset = 892;
+  static int yOffset = 20;
+  static int xRange = 455;
+  static int yRange = 650;
+  static double iosWidth = 375.0; // actual width
+  static double iosHeight = iosWidth * 1.4375; // height of stream element
+  static double iosMenuBar = 20.0;
+  List<double> transformIos(double x1, double x2, double y1, double y2) {
+    return [
+      (xOffset - x1) * (iosWidth / xRange),
+      (xOffset - x2) * (iosWidth / xRange),
+      (y1 - yOffset) * (iosHeight / yRange) + iosMenuBar,
+      (y2 - yOffset) * (iosHeight / yRange) + iosMenuBar
+    ];
+  }
+
+  static double extra = 10.0;
+  List<double> fetchCoordinates(List<double> topLeft, List<double> topRight,
+      List<double> bottomLeft) {
+    double radius = topLeft[1];
+    return [
+      topLeft[2] + 2 * radius + extra,  // x1
+      topLeft[3] - 2 * radius - extra, // y1
+      topRight[2] + extra, // x2
+      bottomLeft[3] - extra, // y2
+    ];
+  }
+
   void parseCodes(Map cd) {
     var toRemove = [];
 
@@ -181,28 +209,17 @@ class RPPT {
     // 93 – top L; 155 – top  R; 203 – bottom L; 271 – bottom R
     if (cd.containsKey(93) && cd.containsKey(155) && cd.containsKey(203) && cd.containsKey(271)){
       print('show photo');
-      double radius = cd[93][1];
+      List<double> coordinates = fetchCoordinates(cd[93], cd[155], cd[203]);
+      double x1_web = coordinates[0]; // top left
+      double y1_web = coordinates[1];
+      double x2_web = coordinates[2]; // top right
+      double y2_web = coordinates[3]; // bottom left
 
-      // top left
-      double x1_web = cd[93][2] + radius;
-      double y1_web = cd[93][3] - radius;
-
-      // top right
-      double x2_web = cd[155][2] + radius;
-
-      // bottom left
-      double y2_web = cd[203][3] - radius;
-
-
-      double iosWidth = 375.0; // actual width
-      double iosHeight = 375.0 * 1.4375; // height of stream element
-      double iosMenuBar = 20.0;
-
-      // coordinate transforms
-      double x1_ios = (892 - x1_web) * (iosWidth / 455);
-      double x2_ios = (892 - x2_web) * (iosWidth / 455);
-      double y1_ios = ((y1_web - 20) * (iosHeight / 650)) + iosMenuBar;
-      double y2_ios = ((y2_web - 20) * (iosHeight / 650)) + iosMenuBar;
+      List<double> transformed = transformIos(x1_web, x2_web, y1_web, y2_web);
+      double x1_ios = transformed[0];
+      double x2_ios = transformed[1];
+      double y1_ios = transformed[2];
+      double y2_ios = transformed[3];
 
       double height_ios = y2_ios - y1_ios;
       double width_ios = x2_ios - x1_ios;
@@ -232,23 +249,17 @@ class RPPT {
     // 157 – top L; 205 – top  R; 279 – bottom L; 327 – bottom R
     if (cd.containsKey(157) && cd.containsKey(205) && cd.containsKey(279) && cd.containsKey(327)){
       print('show map');
-      double radius = cd[157][1];
+      List<double> coordinates = fetchCoordinates(cd[157], cd[205], cd[279]);
+      double x1_web = coordinates[0]; // top left
+      double y1_web = coordinates[1];
+      double x2_web = coordinates[2]; // top right
+      double y2_web = coordinates[3]; // bottom left
 
-      // top left
-      double x1_web = cd[157][2] + radius;
-      double y1_web = cd[157][3] - radius;
-
-      // top right
-      double x2_web = cd[205][2] + radius;
-
-      // bottom left
-      double y2_web = cd[279][3] - radius; 
-
-      // coordinate transforms
-      double x1_ios = (892 - x1_web) * (375/455);
-      double x2_ios = (892 - x2_web) * (375/455);
-      double y1_ios = (y1_web - 20) * (667 / 650);
-      double y2_ios = (y2_web - 20) * (667 / 650);
+      List<double> transformed = transformIos(x1_web, x2_web, y1_web, y2_web);
+      double x1_ios = transformed[0];
+      double x2_ios = transformed[1];
+      double y1_ios = transformed[2];
+      double y2_ios = transformed[3];
 
       double height_ios = y2_ios - y1_ios;
       double width_ios = x2_ios - x1_ios;
